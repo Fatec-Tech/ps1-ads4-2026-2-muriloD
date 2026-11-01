@@ -15,24 +15,23 @@ const pacientes = [
 ];
 let proximoId = 4;
 
-// Exercício 8.1: Total de pacientes cadastrados (declarada antes de /:id)
-app.get('/pacientes/total', (req, res) => {
-  return res.json({ total: pacientes.length });
-});
-
-// READ (lista e Exercício 8.3: filtro por nome) — GET /pacientes
+// READ (lista) — GET /pacientes
 app.get('/pacientes', (req, res) => {
-  const filtroNome = req.query.nome;
+  const { nome } = req.query;
 
-  if (filtroNome) {
-    const busca = filtroNome.trim().toLowerCase();
-    const resultado = pacientes.filter((paciente) =>
-      paciente.nome.toLowerCase().includes(busca)
+  if (nome) {
+    const termo = nome.toLowerCase();
+    const filtrados = pacientes.filter((p) =>
+      p.nome.toLowerCase().includes(termo)
     );
-    return res.json(resultado);
+    return res.json(filtrados);
   }
 
   res.json(pacientes);
+});
+
+app.get('/pacientes/total', (req, res) => {
+  res.json({ total: pacientes.length });
 });
 
 // READ (um) — GET /pacientes/:id
@@ -55,13 +54,12 @@ app.post('/pacientes', (req, res) => {
     return res.status(400).json({ erro: 'Nome, e-mail e nascimento são obrigatórios' });
   }
 
-  // Exercício 8.2: Verifica conflito de e-mail já existente (Status 409)
-  const emailDuplicado = pacientes.find(
-    (p) => p.email.toLowerCase() === email.trim().toLowerCase()
+  const emailJaExiste = pacientes.some(
+    (p) => p.email.toLowerCase() === email.toLowerCase()
   );
 
-  if (emailDuplicado) {
-    return res.status(409).json({ erro: 'Conflito: já existe um paciente com este e-mail' });
+  if (emailJaExiste) {
+    return res.status(409).json({ erro: 'E-mail já cadastrado' });
   }
 
   const novoPaciente = { id: proximoId++, nome, email, nascimento };
@@ -107,4 +105,8 @@ app.delete('/pacientes/:id', (req, res) => {
 });
 
 // Em produção (Render) a porta vem da variável de ambiente PORT
-const PORTA = process.env
+const PORTA = process.env.PORT || 3000;
+
+app.listen(PORTA, () => {
+  console.log(`Servidor rodando na porta ${PORTA}`);
+});
